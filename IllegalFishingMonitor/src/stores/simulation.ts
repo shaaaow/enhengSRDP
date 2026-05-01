@@ -75,6 +75,10 @@ export const useSimulationStore = defineStore('simulation', () => {
   const tdoaResult = ref<TDOAResult | null>(null)
   const localizationResult = ref<LocalizationResult | null>(null)
 
+  // ===== 噪声控制 =====
+  const snrEnabled = ref(false)
+  const snrDb = ref(20)
+
   // ===== 计算状态 =====
   const isComputing = ref(false)
   const computeError = ref<string | null>(null)
@@ -149,6 +153,7 @@ export const useSimulationStore = defineStore('simulation', () => {
         source: { x: boat.x, y: boat.y },
         audio_file: explosionAudio.value,
         sound_speed: 1500.0,
+        snr_db: snrEnabled.value ? snrDb.value : null,
       }
 
       const resp = await fetch('/api/simulation/run', {
@@ -196,6 +201,8 @@ export const useSimulationStore = defineStore('simulation', () => {
     updatePosition,
     engineAudio,
     explosionAudio,
+    snrEnabled,
+    snrDb,
     tdoaResult,
     localizationResult,
     isComputing,

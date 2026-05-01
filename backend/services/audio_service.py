@@ -1,5 +1,6 @@
 """音频文件 I/O 与仿真延迟信号生成"""
 
+import sys
 import wave
 import struct
 import logging
@@ -7,7 +8,10 @@ from pathlib import Path
 
 import numpy as np
 
-from config import UPLOAD_DIR, PRESET_AUDIO_DIR, TEMP_DIR
+from config import UPLOAD_DIR, PRESET_AUDIO_DIR, TEMP_DIR, PROJECT_ROOT
+
+sys.path.insert(0, str(PROJECT_ROOT / "core" / "src"))
+from noise_generator import add_awgn
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +152,7 @@ def generate_delayed_signals(
     sensors: list[tuple[float, float]],
     source_pos: tuple[float, float],
     sound_speed: float,
+    snr_db: float | None = None,
 ) -> list[Path]:
     """根据传感器与声源的几何关系生成各路模拟延迟信号
 
@@ -156,8 +161,15 @@ def generate_delayed_signals(
     @param sensors      - 传感器坐标列表
     @param source_pos   - 声源坐标 (x, y)
     @param sound_speed  - 声速 (m/s)
+    @param snr_db       - 信噪比（dB），None 表示不加噪声
     @returns 各传感器模拟信号的临时 .wav 文件路径列表
     """
+    # 定位信号能量最高帧，确保 GCC-PHAT 首帧包含有效信号
+    offset = _find_peak_energy_offset(source_audio)
+    if offset > 0:
+        logger.info("跳过低能量前段: %d 采样点 (%.3f 秒)", offset, offset / sample_rate)
+        source_audio = source_audio[offset:]
+
     sx, sy = source_pos
 
     distances = [np.sqrt((sx - x) ** 2 + (sy - y) ** 2) for x, y in sensors]
@@ -172,6 +184,9 @@ def generate_delayed_signals(
         delay_samples,
     )
 
+    # 用原始信号功率校准噪声，避免延迟零填充稀释功率
+    src_power = float(np.mean(source_audio ** 2)) if snr_db is not None else None
+
     output_paths = []
     sig_len = len(source_audio)
 
@@ -182,11 +197,29 @@ def generate_delayed_signals(
         elif ds < 0 and abs(ds) < sig_len:
             delayed[:sig_len + ds] = source_audio[-ds:]
 
+        if snr_db is not None:
+            delayed = add_awgn(delayed, snr_db, ref_power=src_power)
+
         path = TEMP_DIR / f"sensor_{i}.wav"
         write_wav(path, delayed, sample_rate)
         output_paths.append(path)
 
     return output_paths
+
+
+def _find_peak_energy_offset(signal: np.ndarray, frame_len: int = 2048) -> int:
+    """找到信号中能量最大帧的起始位置，使 GCC-PHAT 处理最强信号段
+
+    @param signal    - 输入信号
+    @param frame_len - GCC-PHAT 帧长
+    @returns 峰值能量帧的起始采样点索引
+    """
+    n_frames = len(signal) // frame_len
+    if n_frames <= 1:
+        return 0
+    frames = signal[: n_frames * frame_len].reshape(n_frames, frame_len)
+    energies = np.mean(frames ** 2, axis=1)
+    return int(np.argmax(energies)) * frame_len
 
 
 def list_preset_audio() -> list[str]:

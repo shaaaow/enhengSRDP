@@ -33,6 +33,7 @@ class SimulationRequest(BaseModel):
     source: SourcePosition
     audio_file: str = Field(description="音频文件名（上传或预置）")
     sound_speed: float = Field(default=1500.0, gt=0)
+    snr_db: float | None = Field(default=None, description="信噪比（dB），None 表示不加噪声")
 
 
 class TDOAResult(BaseModel):
@@ -57,4 +58,5 @@ class SimulationResponse(BaseModel):
     message: str = ""
     tdoa: TDOAResult | None = None
     localization: LocalizationResult | None = None
+    snr_db: float | None = None
     timestamp: datetime = Field(default_factory=datetime.now)

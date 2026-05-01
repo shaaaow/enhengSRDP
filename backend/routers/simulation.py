@@ -47,6 +47,7 @@ async def run_simulation(req: SimulationRequest):
             sensors=sensor_coords,
             source_pos=source_pos,
             sound_speed=req.sound_speed,
+            snr_db=req.snr_db,
         )
     except Exception as e:
         raise HTTPException(500, f"生成延迟信号失败: {e}")
@@ -109,5 +110,6 @@ async def run_simulation(req: SimulationRequest):
         message="仿真计算完成",
         tdoa=tdoa_result,
         localization=loc_response,
+        snr_db=req.snr_db,
         timestamp=datetime.now(),
     )
