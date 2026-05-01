@@ -42,7 +42,7 @@ class GccPhatCppEstimator(TDOAEstimator):
         target_path: str,
         sample_rate: int = 48000,
         frame_len: int = 2048,
-        max_delay: float = 0.01,
+        max_delay: float = 0.025,
     ) -> dict:
         if not GCC_PHAT_EXE.exists():
             raise FileNotFoundError(f"找不到 C++ 可执行文件: {GCC_PHAT_EXE}")
