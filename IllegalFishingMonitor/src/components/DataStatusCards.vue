@@ -1,7 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useSimulationStore } from '@/stores/simulation'
 
 const store = useSimulationStore()
+
+const tdoaPairs = computed(() => {
+  const t = store.tdoaResult
+  if (!t) return null
+  return [
+    { label: '12', est: t.dt12, theo: t.dt12_theoretical },
+    { label: '13', est: t.dt13, theo: t.dt13_theoretical },
+    { label: '23', est: t.dt23, theo: t.dt23_theoretical },
+  ]
+})
 </script>
 
 <template>
@@ -39,24 +50,21 @@ const store = useSimulationStore()
         算法中间结果
       </h3>
       <ul class="space-y-2 text-[13px] text-gray-600">
-        <li class="flex justify-between">
-          <span class="font-medium text-gray-700">Δt<sub>12</sub>:</span>
-          <span class="font-mono">{{
-            store.tdoaResult ? store.tdoaResult.dt12.toFixed(6) + ' 秒' : '--'
-          }}</span>
-        </li>
-        <li class="flex justify-between">
-          <span class="font-medium text-gray-700">Δt<sub>13</sub>:</span>
-          <span class="font-mono">{{
-            store.tdoaResult ? store.tdoaResult.dt13.toFixed(6) + ' 秒' : '--'
-          }}</span>
-        </li>
-        <li class="flex justify-between">
-          <span class="font-medium text-gray-700">Δt<sub>23</sub>:</span>
-          <span class="font-mono">{{
-            store.tdoaResult ? store.tdoaResult.dt23.toFixed(6) + ' 秒' : '--'
-          }}</span>
-        </li>
+        <template v-if="tdoaPairs">
+          <li v-for="p in tdoaPairs" :key="p.label" class="flex justify-between items-center">
+            <span class="font-medium text-gray-700">Δt<sub>{{ p.label }}</sub>:</span>
+            <span class="font-mono text-right">
+              {{ p.est.toFixed(6) }}
+              <span class="text-gray-400 text-[11px] ml-1">(理论 {{ p.theo.toFixed(6) }})</span>
+            </span>
+          </li>
+        </template>
+        <template v-else>
+          <li v-for="label in ['12', '13', '23']" :key="label" class="flex justify-between">
+            <span class="font-medium text-gray-700">Δt<sub>{{ label }}</sub>:</span>
+            <span class="font-mono">--</span>
+          </li>
+        </template>
         <li class="flex justify-between pt-1.5 border-t border-gray-100">
           <span class="font-medium text-gray-500">GCC 峰值:</span>
           <span class="font-mono text-blue-600">{{

@@ -52,6 +52,14 @@ async def run_simulation(req: SimulationRequest):
     except Exception as e:
         raise HTTPException(500, f"生成延迟信号失败: {e}")
 
+    # 计算理论 TDOA（几何精确值）
+    sx, sy = source_pos
+    distances = [math.sqrt((sx - x) ** 2 + (sy - y) ** 2) for x, y in sensor_coords]
+    theoretical_tdoa = {}
+    for (i, j), label in zip([(0, 1), (0, 2), (1, 2)], ["12", "13", "23"]):
+        theoretical_tdoa[label] = (distances[i] - distances[j]) / req.sound_speed
+
+    # GCC-PHAT TDOA 估计
     estimator = get_tdoa_estimator("gcc_phat")
     pairs = [(0, 1), (0, 2), (1, 2)]
     pair_labels = ["12", "13", "23"]
@@ -75,6 +83,9 @@ async def run_simulation(req: SimulationRequest):
         dt12=round(tdoa_dict["12"], 6),
         dt13=round(tdoa_dict["13"], 6),
         dt23=round(tdoa_dict["23"], 6),
+        dt12_theoretical=round(theoretical_tdoa["12"], 6),
+        dt13_theoretical=round(theoretical_tdoa["13"], 6),
+        dt23_theoretical=round(theoretical_tdoa["23"], 6),
         gcc_peak_12=round(peak_dict["12"], 4),
         gcc_peak_13=round(peak_dict["13"], 4),
         gcc_peak_23=round(peak_dict["23"], 4),

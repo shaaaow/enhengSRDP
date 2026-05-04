@@ -2,6 +2,7 @@
 
 from .gcc_phat import GccPhatCppEstimator
 from .chan import ChanLocalizer
+from .speech import SvmSpeechClassifier
 
 TDOA_ESTIMATORS: dict = {
     "gcc_phat": GccPhatCppEstimator,
@@ -10,6 +11,12 @@ TDOA_ESTIMATORS: dict = {
 LOCALIZERS: dict = {
     "chan": ChanLocalizer,
 }
+
+SPEECH_CLASSIFIERS: dict = {
+    "svm": SvmSpeechClassifier,
+}
+
+_speech_instances: dict = {}
 
 
 def get_tdoa_estimator(name: str = "gcc_phat"):
@@ -28,3 +35,14 @@ def get_localizer(name: str = "chan"):
         available = ", ".join(LOCALIZERS.keys())
         raise ValueError(f"未知的定位算法 '{name}'，可用: {available}")
     return cls()
+
+
+def get_speech_classifier(name: str = "svm"):
+    """按名称获取声音分类器单例（模型只加载一次）"""
+    if name not in _speech_instances:
+        cls = SPEECH_CLASSIFIERS.get(name)
+        if cls is None:
+            available = ", ".join(SPEECH_CLASSIFIERS.keys())
+            raise ValueError(f"未知的分类算法 '{name}'，可用: {available}")
+        _speech_instances[name] = cls()
+    return _speech_instances[name]

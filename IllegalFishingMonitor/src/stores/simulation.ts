@@ -12,6 +12,9 @@ export interface TDOAResult {
   dt12: number
   dt13: number
   dt23: number
+  dt12_theoretical: number
+  dt13_theoretical: number
+  dt23_theoretical: number
   gcc_peak_12: number
   gcc_peak_13: number
   gcc_peak_23: number
@@ -185,10 +188,42 @@ export const useSimulationStore = defineStore('simulation', () => {
     }
   }
 
-  function triggerExplosion() {
+  async function triggerExplosion(filename?: string) {
     triggerStatus.value = 'triggered'
     lastTriggerTime.value = nowTimeStr()
-    addTimelineEvent('监测到疑似炸鱼活动（爆炸声，置信度98%）', 'warning')
+
+    if (filename) {
+      try {
+        const result = await recognizeAudio(filename)
+        const pct = (result.confidence * 100).toFixed(1)
+        if (result.label === 'explosion') {
+          addTimelineEvent(`监测到疑似炸鱼活动（爆炸声，置信度${pct}%）`, 'warning')
+        } else {
+          addTimelineEvent(`识别为引擎声（置信度${pct}%），非炸鱼活动`, 'info')
+        }
+      } catch {
+        addTimelineEvent('语音识别请求失败，使用默认判定（爆炸声）', 'warning')
+      }
+    } else {
+      addTimelineEvent('监测到疑似炸鱼活动（爆炸声）', 'warning')
+    }
+  }
+
+  async function recognizeAudio(filename: string) {
+    const resp = await fetch('/api/speech/recognize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audio_file: filename }),
+    })
+    if (!resp.ok) {
+      const err = await resp.json()
+      throw new Error(err.detail || '识别失败')
+    }
+    return (await resp.json()) as {
+      label: string
+      confidence: number
+      probabilities: Record<string, number>
+    }
   }
 
   function resetTrigger() {

@@ -40,6 +40,9 @@ class TDOAResult(BaseModel):
     dt12: float = Field(description="M1-M2 时延差（秒）")
     dt13: float = Field(description="M1-M3 时延差（秒）")
     dt23: float = Field(description="M2-M3 时延差（秒）")
+    dt12_theoretical: float = Field(description="M1-M2 理论时延差（秒）")
+    dt13_theoretical: float = Field(description="M1-M3 理论时延差（秒）")
+    dt23_theoretical: float = Field(description="M2-M3 理论时延差（秒）")
     gcc_peak_12: float = Field(description="M1-M2 GCC 峰值")
     gcc_peak_13: float = Field(description="M1-M3 GCC 峰值")
     gcc_peak_23: float = Field(description="M2-M3 GCC 峰值")
@@ -60,3 +63,14 @@ class SimulationResponse(BaseModel):
     localization: LocalizationResult | None = None
     snr_db: float | None = None
     timestamp: datetime = Field(default_factory=datetime.now)
+
+
+class SpeechRecognizeRequest(BaseModel):
+    audio_file: str = Field(description="音频文件名（上传或预置）")
+
+
+class SpeechRecognizeResponse(BaseModel):
+    success: bool
+    label: str = Field(description="分类结果: explosion 或 engine")
+    confidence: float = Field(description="分类置信度 [0, 1]")
+    probabilities: dict[str, float] = Field(description="各类别概率")

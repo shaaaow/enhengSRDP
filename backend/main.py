@@ -5,7 +5,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import audio, simulation, reserved
+from routers import audio, simulation, reserved, speech
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,6 +28,7 @@ app.add_middleware(
 
 app.include_router(audio.router)
 app.include_router(simulation.router)
+app.include_router(speech.router)
 app.include_router(reserved.router)
 
 

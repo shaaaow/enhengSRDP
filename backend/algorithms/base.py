@@ -43,3 +43,15 @@ class SourceLocalizer(ABC):
         @returns {x: float, y: float, gdop: float, ...}
         """
         ...
+
+
+class SpeechClassifier(ABC):
+    """声音分类算法基类"""
+
+    @abstractmethod
+    def predict(self, audio_path: str) -> dict:
+        """
+        @param audio_path - 音频文件路径
+        @returns {label: str, confidence: float, probabilities: dict}
+        """
+        ...

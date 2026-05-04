@@ -17,20 +17,24 @@ const store = useSimulationStore()
 
     <!-- 时间线（固定高度，可滚动） -->
     <div class="timeline-scroll relative pl-7 max-h-52 overflow-y-auto pr-1">
-      <!-- 竖线 -->
-      <div class="absolute left-[11px] top-1 bottom-1 w-0.5 bg-gray-200"></div>
-
       <div
         v-for="(entry, idx) in store.timelineEvents"
         :key="idx"
         class="relative pb-5 last:pb-0"
       >
-        <!-- 图标节点 -->
-        <div
-          class="absolute -left-7 w-6 h-6 rounded-full flex items-center justify-center"
-          :class="entry.iconBg"
-        >
-          <i class="fas text-[10px]" :class="[entry.icon, entry.iconColor]"></i>
+        <!-- 图标节点 + 连接线 -->
+        <div class="absolute -left-7 flex flex-col items-center">
+          <div
+            class="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+            :class="entry.iconBg"
+          >
+            <i class="fas text-[10px]" :class="[entry.icon, entry.iconColor]"></i>
+          </div>
+          <!-- 竖线：最后一个事件不绘制 -->
+          <div
+            v-if="idx < store.timelineEvents.length - 1"
+            class="w-0.5 bg-gray-200 grow mt-0.5"
+          ></div>
         </div>
 
         <!-- 内容 -->

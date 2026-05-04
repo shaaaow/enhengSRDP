@@ -9,11 +9,10 @@ const isPlaying = ref(false)
 let autoTimer: ReturnType<typeof setTimeout> | null = null
 let currentAudio: HTMLAudioElement | null = null
 
-function playExplosion() {
+async function playExplosion() {
   if (!store.explosionAudio || isPlaying.value) return
 
   isPlaying.value = true
-  store.triggerExplosion()
 
   currentAudio = new Audio(`/api/audio/file/${encodeURIComponent(store.explosionAudio)}`)
   currentAudio.play().catch(() => {})
@@ -25,6 +24,8 @@ function playExplosion() {
     isPlaying.value = false
     currentAudio = null
   }
+
+  await store.triggerExplosion(store.explosionAudio)
 
   setTimeout(() => {
     store.resetTrigger()

@@ -5,6 +5,7 @@ CLAUDE.md
 .vscode/
 audio/
 .claude/
+voicerecognize/datasets
 
 
 # 后端
